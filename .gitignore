@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Logs and runtime artifacts
+*.log
+jarvis.log
+jarvis_actions.log
+
+# Local config / secrets (override these with jarvis_config.json if desired)
+# jarvis_config.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Misc
+*.wav

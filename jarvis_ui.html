@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>J.A.R.V.I.S v8.0</title>
+<style>
+:root{
+  --bg:#080c12;--bg2:#0d1420;--bg3:#111b2e;--panel:#0a1628;
+  --border:#1a3a5c;--border2:#0f2540;
+  --accent:#00aaff;--accent2:#0066cc;
+  --gold:#c8952a;--gold2:#f5c842;
+  --red:#ff3333;--green:#00ff88;--yellow:#ffcc00;--purple:#9945ff;
+  --text:#c8ddf0;--text2:#6a8fa8;--text3:#3a5a72;
+  --glow:0 0 20px rgba(0,170,255,0.3);
+  --font-mono:'JetBrains Mono','Fira Code','Courier New',monospace;
+  --font-ui:'Inter','Segoe UI',system-ui,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-family:var(--font-ui);font-size:14px;overflow:hidden}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+#app{display:grid;grid-template-rows:56px 1fr;grid-template-columns:260px 1fr 290px;height:100vh}
+/* Header */
+#header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:var(--bg2);border-bottom:1px solid var(--border2);position:relative;z-index:100}
+#header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),var(--gold),var(--accent),transparent);animation:scan 4s linear infinite}
+@keyframes scan{0%,100%{opacity:0.3}50%{opacity:1}}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-hex{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--gold));clip-path:polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:var(--bg);animation:hexglow 3s ease-in-out infinite}
+@keyframes hexglow{0%,100%{filter:drop-shadow(0 0 6px var(--accent))}50%{filter:drop-shadow(0 0 14px var(--gold))}}
+.logo-title{font-size:15px;font-weight:700;letter-spacing:3px;color:var(--accent);font-family:var(--font-mono)}
+.logo-sub{font-size:9px;letter-spacing:2px;color:var(--gold);opacity:.8}
+.hstats{display:flex;gap:20px;align-items:center}
+.sc{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:11px;color:var(--text2)}
+.sc .v{color:var(--accent);font-weight:600}
+.badges{display:flex;gap:8px;align-items:center}
+.badge{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:1px;border:1px solid;text-transform:uppercase}
+.badge.on{border-color:var(--green);color:var(--green);background:rgba(0,255,136,.05)}
+.badge.off{border-color:var(--red);color:var(--red);background:rgba(255,51,51,.05)}
+.badge.mode{border-color:var(--gold);color:var(--gold);background:rgba(200,149,42,.05)}
+.badge.street{border-color:var(--purple);color:var(--purple);background:rgba(153,69,255,.05)}
+/* Sidebar */
+#sidebar{background:var(--bg2);border-right:1px solid var(--border2);overflow-y:auto;padding:12px 0}
+.sh{display:flex;align-items:center;justify-content:space-between;padding:6px 14px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);cursor:pointer}
+.sh:hover{color:var(--text2)}
+.sh .cnt{background:var(--accent2);color:#fff;border-radius:10px;padding:1px 6px;font-size:9px}
+.sb{padding:4px 8px}
+.res{margin:6px 8px}
+.rl{display:flex;justify-content:space-between;margin-bottom:4px;font-size:10px;font-family:var(--font-mono);color:var(--text2)}
+.rl .v{color:var(--text);font-weight:600}
+.bt{height:4px;background:var(--bg3);border-radius:2px;overflow:hidden}
+.bf{height:100%;border-radius:2px;transition:width .8s ease,background .3s}
+.bf.lo{background:linear-gradient(90deg,var(--green),#00cc66)}
+.bf.mi{background:linear-gradient(90deg,var(--yellow),#ff9900)}
+.bf.hi{background:linear-gradient(90deg,var(--red),#ff6600)}
+.si{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;margin-bottom:2px;cursor:pointer;transition:all .2s;font-size:12px;color:var(--text2);border:1px solid transparent}
+.si:hover{background:var(--bg3);border-color:var(--border2);color:var(--text)}
+.si .ico{font-size:13px;min-width:18px;text-align:center}
+.si .lbl{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.si .meta{font-size:10px;color:var(--text3);font-family:var(--font-mono)}
+.pri-u{border-left:2px solid var(--red)!important}
+.pri-h{border-left:2px solid var(--yellow)!important}
+.done .lbl{text-decoration:line-through;opacity:.4}
+/* Main */
+#main{display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+#chat{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+.msg{display:flex;gap:12px;animation:mi .3s ease-out;max-width:100%}
+@keyframes mi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg.user{flex-direction:row-reverse}
+.avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;border:1px solid var(--border)}
+.msg.jarvis .avatar{background:linear-gradient(135deg,var(--accent2),var(--bg3));border-color:var(--accent);box-shadow:var(--glow)}
+.msg.user .avatar{background:linear-gradient(135deg,#1a3a1a,var(--bg3));border-color:var(--green)}
+.bubble{max-width:75%;padding:12px 16px;border-radius:12px;line-height:1.6;font-size:13px}
+.msg.jarvis .bubble{background:var(--panel);border:1px solid var(--border2);border-left:2px solid var(--accent);color:var(--text)}
+.msg.user .bubble{background:linear-gradient(135deg,rgba(0,100,200,.15),rgba(0,60,120,.1));border:1px solid rgba(0,170,255,.2);color:var(--text)}
+.ts{font-size:10px;color:var(--text3);font-family:var(--font-mono);margin-top:6px}
+.card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:8px}
+.ctitle{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);font-family:var(--font-mono);margin-bottom:10px;font-weight:700}
+.code{background:#020810;border:1px solid var(--border2);border-radius:8px;padding:12px;font-family:var(--font-mono);font-size:11px;color:#a8d8a8;white-space:pre-wrap;word-break:break-all;margin-top:8px;max-height:200px;overflow-y:auto}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-top:8px}
+.sbox{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:10px;text-align:center}
+.sbox .sv{font-size:20px;font-weight:700;font-family:var(--font-mono);color:var(--accent)}
+.sbox .sl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+.news-list{list-style:none}
+.news-item{padding:8px 0;border-bottom:1px solid var(--border2);font-size:12px;color:var(--text);cursor:pointer;transition:all .2s}
+.news-item:hover{color:var(--accent);padding-left:4px}
+.news-item:last-child{border:none}
+.quiz{background:linear-gradient(135deg,rgba(0,100,200,.1),rgba(200,149,42,.05));border:1px solid var(--gold);border-radius:10px;padding:16px;margin-top:8px}
+.quiz-q{font-size:14px;color:var(--text);margin-bottom:12px;font-weight:500}
+.quiz-row{display:flex;gap:8px}
+.quiz-row input{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);font-family:var(--font-mono);font-size:12px;outline:none}
+.quiz-row input:focus{border-color:var(--gold)}
+.sc-cursor::after{content:'▋';color:var(--accent);animation:blink .8s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.typing{display:flex;gap:4px;align-items:center;padding:10px 14px}
+.typing span{width:6px;height:6px;background:var(--accent);border-radius:50%;animation:bounce 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-6px);opacity:1}}
+/* Input */
+#ibar{padding:14px 20px;background:var(--bg2);border-top:1px solid var(--border2);display:flex;gap:10px;align-items:flex-end}
+#inp{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 16px;color:var(--text);font-family:var(--font-mono);font-size:13px;resize:none;min-height:42px;max-height:120px;line-height:1.5;outline:none;transition:all .2s}
+#inp:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,170,255,.1)}
+#inp::placeholder{color:var(--text3)}
+.ibtns{display:flex;gap:6px}
+.ibtn{width:42px;height:42px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:all .2s;color:var(--text2);flex-shrink:0}
+.ibtn:hover{background:var(--accent2);border-color:var(--accent);color:#fff;box-shadow:var(--glow)}
+.ibtn.act{background:rgba(255,50,50,.2);border-color:var(--red);color:var(--red);animation:pred 1.5s infinite}
+@keyframes pred{0%,100%{box-shadow:0 0 0 0 rgba(255,51,51,.4)}50%{box-shadow:0 0 0 8px rgba(255,51,51,0)}}
+.sbtn{width:42px;height:42px;background:linear-gradient(135deg,var(--accent2),var(--accent));border:none;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:#fff;transition:all .2s;flex-shrink:0;box-shadow:var(--glow)}
+.sbtn:hover{transform:scale(1.05);box-shadow:0 0 30px rgba(0,170,255,.5)}
+.sbtn:active{transform:scale(.97)}
+/* Right panel */
+#rp{background:var(--bg2);border-left:1px solid var(--border2);overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:14px}
+.pt{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:6px}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:pd 2s infinite}
+@keyframes pd{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+#perf-c{width:100%;height:60px;border:1px solid var(--border2);border-radius:6px;background:var(--bg)}
+.pr{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border2);font-size:11px}
+.pr:last-child{border:none}
+.pn{flex:1;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc{color:var(--accent);font-family:var(--font-mono);font-size:10px;min-width:38px;text-align:right}
+.pm{color:var(--text3);font-family:var(--font-mono);font-size:10px;min-width:38px;text-align:right}
+.ar{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:11px}
+.ar .k{color:var(--text3)}.ar .v{color:var(--accent);font-family:var(--font-mono)}
+.qg{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.qb{padding:8px 5px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;text-align:center;cursor:pointer;transition:all .2s;font-size:10px;color:var(--text2)}
+.qb:hover{border-color:var(--accent);color:var(--accent);background:rgba(0,170,255,.05);transform:translateY(-1px)}
+.qb .qi{font-size:15px;display:block;margin-bottom:2px}
+.mtog{display:flex;background:var(--bg3);border-radius:6px;border:1px solid var(--border);overflow:hidden}
+.mbtn{flex:1;padding:5px 10px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .2s;border:none;background:transparent;color:var(--text3)}
+.mbtn.an{background:rgba(0,170,255,.15);color:var(--accent)}
+.mbtn.as{background:rgba(153,69,255,.15);color:var(--purple)}
+.hr{display:flex;align-items:center;gap:8px;margin-top:6px}
+.hr label{font-size:10px;color:var(--text3);min-width:50px}
+.hr input[type=range]{flex:1;accent-color:var(--accent)}
+.hr .hv{font-family:var(--font-mono);font-size:11px;color:var(--accent);min-width:18px}
+/* Toasts */
+#tc{position:fixed;top:70px;right:16px;display:flex;flex-direction:column;gap:8px;z-index:1000;pointer-events:none}
+.toast{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;font-size:12px;max-width:280px;animation:tin .3s ease-out;pointer-events:all;display:flex;align-items:center;gap:8px}
+@keyframes tin{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+.toast.info{border-left:3px solid var(--accent)}
+.toast.success{border-left:3px solid var(--green)}
+.toast.warning{border-left:3px solid var(--yellow)}
+.toast.error{border-left:3px solid var(--red)}
+.toast.reminder{border-left:3px solid var(--gold)}
+/* Utils */
+.crypto-chip{display:inline-flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-family:var(--font-mono);font-size:12px}
+.crypto-chip .price{color:var(--gold2);font-weight:700}
+.crypto-chip .up{color:var(--green);font-size:11px}.crypto-chip .dn{color:var(--red);font-size:11px}
+.pwd-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 16px;font-family:var(--font-mono);font-size:14px;color:var(--gold2);letter-spacing:2px;display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.cpybtn{font-size:11px;color:var(--accent);cursor:pointer;border:1px solid var(--accent);border-radius:4px;padding:2px 8px;transition:all .2s}
+.cpybtn:hover{background:var(--accent);color:var(--bg)}
+.choice-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;margin-top:8px;align-items:center}
+.choice-opt{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:12px;text-align:center;cursor:pointer;transition:all .2s;font-size:12px}
+.choice-opt:hover{border-color:var(--accent);color:var(--accent)}
+::selection{background:rgba(0,170,255,.3)}
+@media(max-width:900px){#app{grid-template-columns:1fr;grid-template-rows:56px 1fr auto}#sidebar,#rp{display:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="header">
+    <div class="logo">
+      <div class="logo-hex">J</div>
+      <div>
+        <div class="logo-title">J.A.R.V.I.S</div>
+        <div class="logo-sub">Just A Rather Very Intelligent System · v8.0</div>
+      </div>
+    </div>
+    <div class="hstats">
+      <div class="sc">CPU <span class="v" id="h-cpu">—</span>%</div>
+      <div class="sc">RAM <span class="v" id="h-ram">—</span>%</div>
+      <div class="sc">⚡ <span class="v" id="h-model">—</span></div>
+      <div class="sc">⏱ <span class="v" id="h-resp">—</span>ms</div>
+    </div>
+    <div class="badges">
+      <span class="badge off" id="b-ai">AI OFFLINE</span>
+      <span class="badge off" id="b-sys">SYS OFFLINE</span>
+      <span class="badge mode" id="b-mode">NORMAL</span>
+      <span class="badge mode" id="b-time">—</span>
+    </div>
+  </header>
+
+  <nav id="sidebar">
+    <div class="sh">System<span></span></div>
+    <div class="sb">
+      <div class="res"><div class="rl"><span>CPU</span><span class="v" id="s-cpu">—</span></div><div class="bt"><div class="bf" id="bar-cpu" style="width:0%"></div></div></div>
+      <div class="res"><div class="rl"><span>RAM</span><span class="v" id="s-ram">—</span></div><div class="bt"><div class="bf" id="bar-ram" style="width:0%"></div></div></div>
+      <div class="res"><div class="rl"><span>DISK</span><span class="v" id="s-disk">—</span></div><div class="bt"><div class="bf" id="bar-disk" style="width:0%"></div></div></div>
+      <div class="res" id="bat-row" style="display:none"><div class="rl"><span>BAT</span><span class="v" id="s-bat">—</span></div><div class="bt"><div class="bf" id="bar-bat" style="width:0%"></div></div></div>
+    </div>
+    <div class="sh" onclick="sc('my todos')">Todos <span class="cnt" id="tc-cnt">0</span></div>
+    <div class="sb" id="todo-list"></div>
+    <div class="sh" onclick="sc('my notes')">Notes <span class="cnt" id="nc-cnt">0</span></div>
+    <div class="sb" id="note-list"></div>
+    <div class="sh" onclick="sc('my habits')">Habits <span class="cnt" id="hc-cnt">0</span></div>
+    <div class="sb" id="habit-list"></div>
+    <div class="sh" onclick="sc('reminders')">Reminders <span class="cnt" id="rc-cnt">0</span></div>
+    <div class="sb" id="rem-list"></div>
+  </nav>
+
+  <main id="main">
+    <div id="chat"></div>
+    <div id="ibar">
+      <textarea id="inp" rows="1" placeholder="Talk to JARVIS... or type a command"
+        onkeydown="onKey(event)" oninput="ar(this)"></textarea>
+      <div class="ibtns">
+        <button class="ibtn" id="mic-btn" onclick="toggleMic()" title="Voice">🎤</button>
+        <button class="ibtn" onclick="sc('briefing')" title="Briefing">📋</button>
+        <button class="ibtn" onclick="sc('status')" title="Status">⚙️</button>
+      </div>
+      <button class="sbtn" onclick="send()">➤</button>
+    </div>
+  </main>
+
+  <aside id="rp">
+    <div>
+      <div class="pt"><div class="dot"></div>Personality</div>
+      <div class="mtog">
+        <button class="mbtn an" id="bn" onclick="setMode('normal')">Normal</button>
+        <button class="mbtn" id="bs" onclick="setMode('street')">Street</button>
+      </div>
+      <div class="hr">
+        <label>Humor</label>
+        <input type="range" min="0" max="10" value="5" id="hsl" oninput="setHumor(this.value)">
+        <span class="hv" id="hv">5</span>
+      </div>
+    </div>
+    <div>
+      <div class="pt"><div class="dot"></div>Performance</div>
+      <canvas id="perf-c"></canvas>
+    </div>
+    <div>
+      <div class="pt"><div class="dot"></div>Top Processes</div>
+      <div id="proc-list"></div>
+    </div>
+    <div>
+      <div class="pt"><div class="dot"></div>AI Engine</div>
+      <div id="ai-stats"></div>
+    </div>
+    <div>
+      <div class="pt"><div class="dot"></div>Quick Actions</div>
+      <div class="qg">
+        <div class="qb" onclick="sc('git status')"><span class="qi">📦</span>Git Status</div>
+        <div class="qb" onclick="sc('auto optimize')"><span class="qi">⚡</span>Optimize</div>
+        <div class="qb" onclick="sc('generate password')"><span class="qi">🔐</span>Password</div>
+        <div class="qb" onclick="sc('news')"><span class="qi">📰</span>Headlines</div>
+        <div class="qb" onclick="sc('trivia')"><span class="qi">🧠</span>Trivia</div>
+        <div class="qb" onclick="sc('roast me')"><span class="qi">🔥</span>Roast Me</div>
+        <div class="qb" onclick="sc('bitcoin')"><span class="qi">₿</span>Crypto</div>
+        <div class="qb" onclick="sc('this or that')"><span class="qi">🎲</span>This/That</div>
+        <div class="qb" onclick="sc('briefing')"><span class="qi">📋</span>Briefing</div>
+        <div class="qb" onclick="sc('rant')"><span class="qi">💢</span>Rant</div>
+      </div>
+    </div>
+    <div>
+      <div class="pt"><div class="dot"></div>Session</div>
+      <div id="sess-stats"></div>
+    </div>
+  </aside>
+</div>
+<div id="tc"></div>
+
+<script>
+let ws=null,connected=false,streamEl=null,streamBuf='',micActive=false,recognition=null;
+let perfHist=[],personality={mode:'normal',humor_level:5};
+
+function connect(){
+  ws=new WebSocket(`ws://${location.host}/ws`);
+  ws.onopen=()=>{connected=true;toast('JARVIS online','success');clock()};
+  ws.onclose=()=>{connected=false;toast('Reconnecting...','warning');setTimeout(connect,2000)};
+  ws.onerror=()=>toast('WebSocket error','error');
+  ws.onmessage=e=>{try{handle(JSON.parse(e.data))}catch(err){console.error(err)}};
+}
+function wsend(d){if(ws&&ws.readyState===1)ws.send(JSON.stringify(d))}
+
+function handle(m){
+  switch(m.type){
+    case'init':
+      personality=m.personality||personality;updPers();
+      updBadges(m.ai_online,m.sys_online);
+      if(m.snapshot)updSnap(m.snapshot);
+      if(m.notes)rNotes(m.notes);if(m.todos)rTodos(m.todos);
+      if(m.habits)rHabits(m.habits);if(m.reminders)rRems(m.reminders);
+      if(m.stats)rSess(m.stats);if(m.config)applyConfig(m.config);
+      jmsg(personality.mode==='street'
+        ?`yo ${m.config?.user_name||'bro'}. system's up. what we doing?`
+        :`Good to see you, sir. All systems nominal. How may I assist?`,null,true);
+      break;
+    case'snapshot':updSnap(m.data);break;
+    case'message':finStream();jmsg(m.text);break;
+    case'thinking':addThinking();break;
+    case'stream_start':streamEl=jmsg('',null,false,true);streamBuf='';break;
+    case'stream_token':
+      if(streamEl){streamBuf+=m.token;streamEl.querySelector('.bubble').innerHTML=fmt(streamBuf)+'<span class="sc-cursor"></span>';scrollB()}
+      break;
+    case'stream_end':finStream();break;
+    case'system_stats':jmsg(null,sysCard(m.data));break;
+    case'processes':rProcs(m.data);jmsg(null,procCard(m.data));break;
+    case'notes':rNotes(m.data);m.data?.length>0?jmsg(`${m.data.length} note(s) in memory.`,notesCard(m.data)):jmsg('Memory banks empty, sir.');break;
+    case'note_added':jmsg(m.text);break;
+    case'todos':rTodos(m.data);jmsg(null,todosCard(m.data));break;
+    case'todo_added':jmsg(m.text);break;
+    case'habits':rHabits(m.data);jmsg(null,habitsCard(m.data));break;
+    case'habit_checked':rHabits(null);jmsg(m.text);break;
+    case'reminders':rRems(m.data);jmsg(m.data.length?`${m.data.length} reminder(s) pending.`:'No pending reminders, sir.');break;
+    case'reminder_set':jmsg(m.text);break;
+    case'reminder':toast(`⏰ ${m.message}`,'reminder',8000);jmsg(`Reminder: ${m.message}`);break;
+    case'alert':toast(`⚠️ ${m.message}`,'warning',5000);break;
+    case'session_stats':rSess(m.data);jmsg(null,sessCard(m.data));break;
+    case'ai_stats':rAI(m.data);jmsg(null,aiCard(m.data));break;
+    case'action_log':jmsg(null,codeCard(m.data));break;
+    case'news':jmsg(null,newsCard(m.headlines));break;
+    case'crypto':jmsg(m.text,cryptoCard(m));break;
+    case'password':jmsg(m.text,pwdCard(m.password));break;
+    case'hash':jmsg(null,hashCard(m.data));break;
+    case'models':case'model_changed':
+      if(m.model||m.current)setEl('h-model',(m.model||m.current).split(':')[0]);
+      jmsg(m.type==='model_changed'?`Model switched to '${m.model}'.`:null,
+           m.data?modelsCard(m.data,m.current||''):null);break;
+    case'git':case'shell_output':case'code_output':case'optimize_result':
+    case'bottleneck':case'workspace':case'workspaces':case'battery':
+    case'network':case'dns':case'files':case'port_scan':case'speed_test':
+    case'startup':case'logs':case'windows':
+      jmsg(m.text||null,codeCard(Array.isArray(m.data)?m.data:m.data?[JSON.stringify(m.data)]:[]),true);break;
+    case'wikipedia':jmsg(null,wikiCard(m.query,m.text));break;
+    case'aliases':jmsg(null,codeCard(Object.entries(m.data).map(([k,v])=>`${k.padEnd(18)} → ${v}`)));break;
+    case'trivia':case'math_quiz':jmsg(null,quizCard(m.question||m.text));break;
+    case'trivia_result':case'math_result':jmsg(m.text);break;
+    case'coin_flip':case'dice_roll':jmsg(m.text,diceCard(m));break;
+    case'this_or_that':case'would_you_rather':jmsg(null,choiceCard(m));break;
+    case'word_chain':jmsg(`'${m.word}'`);break;
+    case'briefing':jmsg(m.text,briefCard(m.data));break;
+    case'personality':personality=m.data;updPers();jmsg(`Mode: ${personality.mode}, humor ${personality.humor_level}/10.`);break;
+    case'mode_changed':personality.mode=m.mode_changed;updPers();jmsg(m.text);break;
+    case'help':jmsg(null,helpCard());break;
+    case'goodbye':jmsg(m.text,sessCard(m.data));break;
+    case'error':finStream();jmsg(m.text||'Something went wrong.');break;
+    default:if(m.text)jmsg(m.text);
+  }
+}
+
+function scrollB(){const c=document.getElementById('chat');c.scrollTop=c.scrollHeight}
+function h(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function fmt(t){
+  if(!t)return'';
+  t=t.replace(/```[\w]*\n([\s\S]*?)```/g,'<div class="code">$1</div>');
+  t=t.replace(/`([^`]+)`/g,'<code style="font-family:monospace;background:rgba(0,170,255,.1);padding:1px 4px;border-radius:3px;color:var(--accent)">$1</code>');
+  t=t.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+  t=t.replace(/\n/g,'<br>');
+  return t;
+}
+
+function umsg(text){
+  const c=document.getElementById('chat');
+  const el=document.createElement('div');el.className='msg user';
+  el.innerHTML=`<div class="avatar">👤</div><div><div class="bubble">${h(text)}</div><div class="ts">${new Date().toLocaleTimeString()}</div></div>`;
+  c.appendChild(el);scrollB();
+}
+
+function jmsg(text,card=null,hl=false,streaming=false){
+  const c=document.getElementById('chat');
+  rmThinking();
+  const el=document.createElement('div');el.className='msg jarvis'+(hl?' fade-in':'');
+  const tb=text?`<div class="bubble${streaming?' sc-cursor':''}">${streaming?'':fmt(text)}</div>`:'';
+  const cb=card?`<div>${card}</div>`:'';
+  el.innerHTML=`<div class="avatar">⬡</div><div style="max-width:75%">${tb}${cb}<div class="ts">${new Date().toLocaleTimeString()} · JARVIS</div></div>`;
+  c.appendChild(el);scrollB();return el;
+}
+
+function addThinking(){
+  rmThinking();
+  const c=document.getElementById('chat');const el=document.createElement('div');
+  el.className='msg jarvis';el.id='thinker';
+  el.innerHTML=`<div class="avatar">⬡</div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  c.appendChild(el);scrollB();
+}
+function rmThinking(){const e=document.getElementById('thinker');if(e)e.remove()}
+function finStream(){
+  if(streamEl){const b=streamEl.querySelector('.bubble');if(b)b.innerHTML=fmt(streamBuf);streamEl=null;streamBuf=''}
+  rmThinking();
+}
+
+// ── Card builders ─────────────────────────────────────────────────────────────
+function bar(v,c){return`<div style="flex:1;height:5px;background:var(--bg);border-radius:3px;overflow:hidden"><div style="width:${Math.min(100,v||0)}%;height:100%;background:${c};transition:width .8s"></div></div>`}
+
+function sysCard(d){
+  if(!d||!d.cpu)return'';
+  return`<div class="card"><div class="ctitle">System Status</div><div class="sgrid">
+    <div class="sbox"><div class="sv">${d.cpu?.toFixed(0)}%</div><div class="sl">CPU</div></div>
+    <div class="sbox"><div class="sv">${d.ram?.toFixed(0)}%</div><div class="sl">RAM</div></div>
+    <div class="sbox"><div class="sv">${d.disk?.toFixed(0)}%</div><div class="sl">Disk</div></div>
+    ${d.battery_pct!=null?`<div class="sbox"><div class="sv">${d.battery_pct?.toFixed(0)}%</div><div class="sl">${d.battery_charging?'⚡':'🔋'}</div></div>`:''}
+  </div><div style="display:flex;flex-direction:column;gap:4px;margin-top:8px;font-size:10px;color:var(--text3)">
+    <div style="display:flex;align-items:center;gap:6px">CPU ${bar(d.cpu,'var(--accent)')}</div>
+    <div style="display:flex;align-items:center;gap:6px">RAM ${bar(d.ram,'var(--gold)')}</div>
+  </div><div style="margin-top:6px;font-size:10px;color:var(--text3);font-family:var(--font-mono)">${d.ram_used_mb}MB/${d.ram_total_mb}MB · ${d.disk_free_gb}GB free</div></div>`;
+}
+
+function procCard(p){
+  if(!p||!p.length)return'';
+  return`<div class="card"><div class="ctitle">Top Processes</div>${p.slice(0,6).map(x=>`<div class="pr"><span class="pn">${h(x.name)}</span><span class="pc">${x.cpu}%</span><span class="pm">${x.mem?.toFixed(1)}%</span></div>`).join('')}</div>`;
+}
+
+function notesCard(notes){
+  return`<div class="card"><div class="ctitle">Notes (${notes.length})</div>${notes.slice(0,5).map(n=>`<div class="si"><span class="ico">📝</span><span class="lbl">${h(n.text.substring(0,50))}</span><span class="meta">[${(n.tags||['general']).join(',')}]</span></div>`).join('')}</div>`;
+}
+
+function todosCard(todos){
+  const colors={urgent:'var(--red)',high:'var(--yellow)',normal:'var(--accent)',low:'var(--text3)'};
+  return`<div class="card"><div class="ctitle">Todos (${todos.filter(t=>!t.done).length} pending)</div>${todos.slice(0,6).map(t=>`<div class="si ${t.done?'done':''}"><span>${t.done?'✅':'○'}</span><span class="lbl">${h(t.text.substring(0,40))}</span><span style="color:${colors[t.priority]};font-size:10px">${t.priority}</span></div>`).join('')}<div style="text-align:right;font-size:10px;color:var(--text3);margin-top:4px">${todos.filter(t=>t.done).length}/${todos.length} done</div></div>`;
+}
+
+function habitsCard(habits){
+  const today=new Date().toISOString().split('T')[0];
+  const entries=Object.entries(habits);
+  return`<div class="card"><div class="ctitle">Habits</div>${entries.map(([n,h2])=>`<div class="si"><span>${h2.last===today?'✅':'○'}</span><span class="lbl">${n}</span><span class="meta">🔥${h2.streak}d</span></div>`).join('')}</div>`;
+}
+
+function sessCard(d){
+  if(!d)return'';
+  return`<div class="card"><div class="ctitle">Session</div><div class="sgrid">
+    <div class="sbox"><div class="sv">${d.commands}</div><div class="sl">Commands</div></div>
+    <div class="sbox"><div class="sv">${d.commands_per_min}</div><div class="sl">Cmd/min</div></div>
+    <div class="sbox"><div class="sv">${d.ai_avg_ms}</div><div class="sl">AI ms</div></div>
+    <div class="sbox"><div class="sv">${d.cache_hit_rate}</div><div class="sl">Cache</div></div>
+  </div><div style="margin-top:6px;font-size:10px;color:var(--text3);font-family:var(--font-mono)">${d.duration} · ${d.mood}</div></div>`;
+}
+
+function aiCard(d){
+  if(!d)return'';
+  return`<div class="card"><div class="ctitle">AI Engine</div>
+    <div class="ar"><span class="k">Model</span><span class="v">${(d.current_model||'—').split(':')[0]}</span></div>
+    <div class="ar"><span class="k">Avg Response</span><span class="v">${d.avg_response_ms}ms</span></div>
+    <div class="ar"><span class="k">Cache Hit Rate</span><span class="v">${d.cache?.hit_rate}</span></div>
+    <div class="ar"><span class="k">Messages</span><span class="v">${d.conversation?.messages}</span></div>
+    <div class="ar"><span class="k">Total Turns</span><span class="v">${d.conversation?.total_turns}</span></div>
+  </div>`;
+}
+
+function codeCard(lines,small=false){
+  if(!lines||!lines.length)return'';
+  return`<div class="card"><div class="code">${h(Array.isArray(lines)?lines.join('\n'):String(lines))}</div></div>`;
+}
+
+function newsCard(hl){
+  return`<div class="card"><div class="ctitle">BBC Headlines</div><ul class="news-list">${(hl||[]).map((x,i)=>`<li class="news-item" onclick="sc('search ${h(x)}')">${i+1}. ${h(x)}</li>`).join('')}</ul></div>`;
+}
+
+function cryptoCard(d){
+  const arrow=d.change>0?'▲':'▼';const cls=d.change>0?'up':'dn';
+  return`<div class="card"><div class="ctitle">${d.coin?.toUpperCase()}</div><div class="crypto-chip"><span>₿</span><span class="price">$${Number(d.price).toLocaleString()}</span><span class="${cls}">${arrow} ${Math.abs(d.change).toFixed(2)}%</span></div></div>`;
+}
+
+function pwdCard(pwd){
+  return`<div class="card"><div class="ctitle">Generated Password</div><div class="pwd-box"><span id="pwd-text">${h(pwd)}</span><span class="cpybtn" onclick="copyPwd()">Copy</span></div></div>`;
+}
+function copyPwd(){const e=document.getElementById('pwd-text');if(e){navigator.clipboard.writeText(e.textContent);toast('Copied!','success',2000)}}
+
+function hashCard(d){
+  return`<div class="card"><div class="ctitle">Hash Values</div>${Object.entries(d).map(([k,v])=>`<div class="ar"><span class="k">${k.toUpperCase()}</span><span class="v" style="font-size:9px;word-break:break-all">${v}</span></div>`).join('')}</div>`;
+}
+
+function modelsCard(models,current){
+  return`<div class="card"><div class="ctitle">Available Models</div>${(models||[]).map(m=>`<div class="si" style="${m===current?'border-left:2px solid var(--accent)':''}"><span>${m===current?'✓':'○'}</span><span class="lbl" style="font-family:var(--font-mono);font-size:11px">${m}</span>${m!==current?`<span class="meta" style="cursor:pointer;color:var(--accent)" onclick="sc('switch model ${m}')">use</span>`:'<span class="meta" style="color:var(--green)">active</span>'}</div>`).join('')}</div>`;
+}
+
+function wikiCard(q,t){
+  return`<div class="card"><div class="ctitle">Wikipedia: ${h(q)}</div><div style="font-size:12px;line-height:1.7;color:var(--text)">${h(t)}</div></div>`;
+}
+
+function quizCard(q){
+  return`<div class="quiz"><div class="quiz-q">🧠 ${h(q)}</div><div class="quiz-row"><input id="qa" placeholder="Your answer..." onkeydown="if(event.key==='Enter')subQ()"><button class="cpybtn" onclick="subQ()">Submit</button><button class="cpybtn" style="border-color:var(--gold);color:var(--gold)" onclick="sc('hint')">Hint</button></div></div>`;
+}
+function subQ(){const e=document.getElementById('qa');if(e&&e.value.trim()){sc(e.value.trim());e.value=''}}
+
+function diceCard(d){
+  const em=d.type==='coin_flip'?'🪙':['⚀','⚁','⚂','⚃','⚄','⚅'][d.result-1]||'🎲';
+  return`<div class="card" style="text-align:center"><div style="font-size:48px;margin:8px 0">${em}</div><div style="font-size:20px;font-weight:700;color:var(--gold2)">${d.result}</div></div>`;
+}
+
+function choiceCard(d){
+  return`<div class="card"><div class="ctitle">${d.type==='would_you_rather'?'Would You Rather':'This or That'}</div><div class="choice-grid"><div class="choice-opt" onclick="sc('${h(d.a)}')">${h(d.a)}</div><div style="text-align:center;color:var(--text3);font-weight:700">OR</div><div class="choice-opt" onclick="sc('${h(d.b)}')">${h(d.b)}</div></div></div>`;
+}
+
+function briefCard(d){
+  if(!d)return'';
+  return`<div class="card"><div class="ctitle">Briefing</div><div class="sgrid">
+    <div class="sbox"><div class="sv">${d.notes}</div><div class="sl">Notes</div></div>
+    <div class="sbox"><div class="sv">${d.todos}</div><div class="sl">Todos</div></div>
+    <div class="sbox"><div class="sv">${d.reminders}</div><div class="sl">Reminders</div></div>
+    ${d.snapshot?.cpu!=null?`<div class="sbox"><div class="sv">${d.snapshot.cpu?.toFixed(0)}%</div><div class="sl">CPU</div></div>`:''}
+  </div></div>`;
+}
+
+function helpCard(){
+  const cmds=[
+    ['Chat & AI','briefing · clear history · switch model <name> · list models · ai stats'],
+    ['Notes','note <text> · my notes · search notes <q> · delete note <n> · clear notes'],
+    ['Todos','todo <text> · todo urgent <text> · my todos · done <n> · delete todo <n>'],
+    ['Habits','add habit <name> · check habit <name> · my habits'],
+    ['Reminders','remind me in <n> minutes to <msg> · remind me at HH:MM to <msg>'],
+    ['Git','git status · smart commit · git push · git pull · git diff · git branch'],
+    ['System','status · processes · auto optimize · bottleneck · battery · session stats'],
+    ['Security','generate password · hash <text> · encode · decode · public ip · scan ports <host>'],
+    ['Fun','trivia · roast me · compliment me · this or that · would you rather · debate <topic> · rant · opinion on <topic> · story · eli5 <topic> · shower thought · joke · 8 ball'],
+    ['Mode','normal mode · street mode · humor level <0-10>'],
+    ['Network','speed test · wifi on/off · wifi connect <ssid> · dns <domain> · traceroute <host>'],
+    ['Apps','open chrome · open vscode · open spotify · open terminal · screenshot'],
+  ];
+  const html=cmds.map(([t,c])=>`<div style="margin-bottom:8px"><div style="font-size:10px;color:var(--gold);font-weight:700;margin-bottom:4px">${t}</div><div style="font-size:11px;color:var(--text2);line-height:1.8">${c.split(' · ').map(x=>`<span onclick="document.getElementById('inp').value='${x.includes('<')?'':x}';document.getElementById('inp').focus()" style="display:inline-block;margin:2px;padding:1px 7px;border:1px solid var(--border2);border-radius:4px;cursor:pointer;font-family:var(--font-mono)" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color=''">${x}</span>`).join('')}</div></div>`).join('');
+  return`<div class="card"><div class="ctitle">Command Reference</div>${html}</div>`;
+}
+
+// ── Sidebar renders ───────────────────────────────────────────────────────────
+function rNotes(notes){
+  if(!notes){sc('my notes');return}
+  setEl('nc-cnt',notes.length);
+  document.getElementById('note-list').innerHTML=notes.slice(0,5).map(n=>`<div class="si"><span class="ico">📝</span><span class="lbl">${h(n.text.substring(0,26))}${n.text.length>26?'…':''}</span></div>`).join('');
+}
+function rTodos(todos){
+  if(!todos){sc('my todos');return}
+  const p=todos.filter(t=>!t.done);setEl('tc-cnt',p.length);
+  document.getElementById('todo-list').innerHTML=p.slice(0,5).map(t=>`<div class="si pri-${t.priority}" onclick="sc('done ${t.id}')"><span>○</span><span class="lbl">${h(t.text.substring(0,24))}</span><span class="meta">${t.priority}</span></div>`).join('');
+}
+function rHabits(habits){
+  if(!habits){sc('my habits');return}
+  const entries=Object.entries(habits);setEl('hc-cnt',entries.length);
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('habit-list').innerHTML=entries.slice(0,5).map(([n,hb])=>`<div class="si" onclick="sc('check habit ${n}')"><span>${hb.last===today?'✅':'○'}</span><span class="lbl">${n}</span><span class="meta">🔥${hb.streak}d</span></div>`).join('');
+}
+function rRems(rems){
+  if(!rems){sc('reminders');return}
+  setEl('rc-cnt',rems.length);
+  document.getElementById('rem-list').innerHTML=rems.slice(0,4).map(r=>`<div class="si"><span class="ico">⏰</span><span class="lbl">${h(r.msg.substring(0,22))}</span><span class="meta">${new Date(r.time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></div>`).join('');
+}
+function rProcs(procs){
+  if(!procs)return;
+  document.getElementById('proc-list').innerHTML=procs.slice(0,6).map(p=>`<div class="pr"><span class="pn">${h(p.name)}</span><span class="pc">${p.cpu}%</span><span class="pm">${p.mem?.toFixed(1)}%</span></div>`).join('');
+}
+function rAI(d){
+  if(!d)return;
+  document.getElementById('ai-stats').innerHTML=`
+    <div class="ar"><span class="k">Model</span><span class="v">${(d.current_model||'—').split(':')[0]}</span></div>
+    <div class="ar"><span class="k">Avg Response</span><span class="v">${d.avg_response_ms||0}ms</span></div>
+    <div class="ar"><span class="k">Cache Hit</span><span class="v">${d.cache?.hit_rate||'0%'}</span></div>
+    <div class="ar"><span class="k">Messages</span><span class="v">${d.conversation?.messages||0}</span></div>`;
+}
+function rSess(d){
+  if(!d)return;
+  document.getElementById('sess-stats').innerHTML=`
+    <div class="ar"><span class="k">Duration</span><span class="v">${d.duration}</span></div>
+    <div class="ar"><span class="k">Commands</span><span class="v">${d.commands}</span></div>
+    <div class="ar"><span class="k">Mood</span><span class="v">${d.mood}</span></div>
+    <div class="ar"><span class="k">Cache</span><span class="v">${d.cache_hit_rate}</span></div>`;
+}
+
+// ── Snapshot ──────────────────────────────────────────────────────────────────
+function updSnap(d){
+  if(!d)return;
+  setEl('h-cpu',d.cpu?.toFixed(0));setEl('h-ram',d.ram?.toFixed(0));
+  setBr('bar-cpu',d.cpu);setBr('bar-ram',d.ram);setBr('bar-disk',d.disk);
+  setEl('s-cpu',`${d.cpu?.toFixed(1)}%`);
+  setEl('s-ram',`${d.ram?.toFixed(1)}% · ${d.ram_used_mb}MB`);
+  setEl('s-disk',`${d.disk?.toFixed(1)}%`);
+  if(d.battery_pct!=null){
+    document.getElementById('bat-row').style.display='block';
+    setBr('bar-bat',d.battery_pct);
+    setEl('s-bat',`${d.battery_pct?.toFixed(0)}% ${d.battery_charging?'⚡':'🔋'}`);
+  }
+  perfHist.push({cpu:d.cpu,ram:d.ram});
+  if(perfHist.length>60)perfHist.shift();
+  drawChart();
+}
+function setEl(id,v){const e=document.getElementById(id);if(e&&v!==undefined)e.textContent=v}
+function setBr(id,pct){
+  const e=document.getElementById(id);if(!e)return;
+  e.style.width=Math.min(100,pct||0)+'%';
+  e.className='bf '+(pct<60?'lo':pct<80?'mi':'hi');
+}
+
+// ── Perf chart ────────────────────────────────────────────────────────────────
+function drawChart(){
+  const c=document.getElementById('perf-c');if(!c)return;
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=60;
+  c.width=W;c.height=H;
+  ctx.fillStyle='#080c12';ctx.fillRect(0,0,W,H);
+  const draw=(data,color)=>{
+    if(!data.length)return;
+    ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.shadowColor=color;ctx.shadowBlur=4;
+    data.forEach((v,i)=>{const x=(i/(data.length-1))*W,y=H-(v/100)*H;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});
+    ctx.stroke();ctx.shadowBlur=0;ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
+    ctx.fillStyle=color.replace('rgb','rgba').replace(')',',0.08)');ctx.fill();
+  };
+  draw(perfHist.map(p=>p.cpu),'#00aaff');
+  draw(perfHist.map(p=>p.ram),'#c8952a');
+  ctx.shadowBlur=0;ctx.font='9px monospace';
+  ctx.fillStyle='#00aaff';ctx.fillText(`CPU ${perfHist[perfHist.length-1]?.cpu?.toFixed(0)||0}%`,4,12);
+  ctx.fillStyle='#c8952a';ctx.fillText(`RAM ${perfHist[perfHist.length-1]?.ram?.toFixed(0)||0}%`,4,22);
+}
+
+// ── Badges ────────────────────────────────────────────────────────────────────
+function updBadges(ai,sys){
+  const ba=document.getElementById('b-ai'),bs=document.getElementById('b-sys');
+  if(ba){ba.textContent=ai?'AI ONLINE':'AI OFFLINE';ba.className=`badge ${ai?'on':'off'}`}
+  if(bs){bs.textContent=sys?'SYS ONLINE':'SYS OFFLINE';bs.className=`badge ${sys?'on':'off'}`}
+}
+function applyConfig(cfg){
+  if(cfg.primary_model)setEl('h-model',cfg.primary_model.split(':')[0]);
+  if(cfg.personality_mode){personality.mode=cfg.personality_mode;updPers()}
+  if(cfg.humor_level!==undefined){
+    personality.humor_level=cfg.humor_level;
+    const sl=document.getElementById('hsl');const hv=document.getElementById('hv');
+    if(sl)sl.value=cfg.humor_level;if(hv)hv.textContent=cfg.humor_level;
+  }
+}
+function updPers(){
+  const isS=personality.mode==='street';
+  const bm=document.getElementById('b-mode');const bn=document.getElementById('bn');const bs=document.getElementById('bs');
+  if(bm){bm.textContent=isS?'STREET':'NORMAL';bm.className=`badge ${isS?'street':'mode'}`}
+  if(bn)bn.className=`mbtn ${!isS?'an':''}`;
+  if(bs)bs.className=`mbtn ${isS?'as':''}`;
+}
+function clock(){const e=document.getElementById('b-time');if(e)e.textContent=new Date().toLocaleTimeString();setTimeout(clock,1000)}
+
+// ── Input ─────────────────────────────────────────────────────────────────────
+function send(){
+  const inp=document.getElementById('inp');const text=inp.value.trim();
+  if(!text)return;umsg(text);wsend({command:text});inp.value='';inp.style.height='auto';
+}
+function sc(cmd){umsg(cmd);wsend({command:cmd})}
+function onKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}}
+function ar(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px'}
+
+// ── Mode/humor ────────────────────────────────────────────────────────────────
+function setMode(m){sc(m==='street'?'street mode':'normal mode')}
+function setHumor(v){
+  document.getElementById('hv').textContent=v;personality.humor_level=parseInt(v);
+  clearTimeout(window._ht);window._ht=setTimeout(()=>sc(`humor level ${v}`),600);
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function toast(msg,type='info',dur=4000){
+  const c=document.getElementById('tc');const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  const icons={info:'ℹ️',success:'✅',warning:'⚠️',error:'❌',reminder:'⏰'};
+  el.innerHTML=`<span>${icons[type]||'•'}</span><span>${h(msg)}</span>`;
+  c.appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transition='.3s';setTimeout(()=>el.remove(),300)},dur);
+}
+
+// ── Voice ─────────────────────────────────────────────────────────────────────
+function toggleMic(){
+  if(!('webkitSpeechRecognition'in window||'SpeechRecognition'in window)){toast('Voice not supported','warning');return}
+  if(micActive){recognition?.stop();return}
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  recognition=new SR();recognition.lang='en-US';recognition.continuous=false;recognition.interimResults=false;
+  recognition.onstart=()=>{micActive=true;document.getElementById('mic-btn').classList.add('act');toast('Listening...','info',3000)};
+  recognition.onresult=e=>{const t=e.results[0][0].transcript;document.getElementById('inp').value=t;send()};
+  recognition.onend=()=>{micActive=false;document.getElementById('mic-btn').classList.remove('act')};
+  recognition.onerror=e=>{micActive=false;document.getElementById('mic-btn').classList.remove('act');toast(`Voice error: ${e.error}`,'error')};
+  recognition.start();
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  connect();drawChart();
+  setInterval(drawChart,2000);
+  setInterval(()=>{if(connected)fetch('/api/processes').then(r=>r.json()).then(d=>{if(d.processes)rProcs(d.processes)}).catch(()=>{})},5000);
+  setInterval(()=>{if(connected)fetch('/api/ai/stats').then(r=>r.json()).then(d=>rAI(d)).catch(()=>{})},15000);
+  setInterval(()=>{if(connected)fetch('/api/status').then(r=>r.json()).then(d=>{if(d.session)rSess(d.session);if(d.ai)rAI(d.ai)}).catch(()=>{})},30000);
+});
+</script>
+</body>
+</html>

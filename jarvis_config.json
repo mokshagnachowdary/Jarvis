@@ -1,0 +1,21 @@
+{
+  "user_name": "Moksh",
+  "default_city": "Hyderabad",
+  "ollama_url": "http://127.0.0.1:11434",
+  "primary_model": "llama3.2:3b",
+  "fast_model": "llama3.2:3b",
+  "vision_model": "llava:7b",
+  "code_model": "qwen2.5-coder:7b",
+  "max_history_tokens": 4000,
+  "weather_api_key": "-",
+  "fast_mode": true,
+  "stream_responses": true,
+  "response_cache_ttl": 300,
+  "personality_mode": "street",
+  "humor_level": 8,
+  "roast_level": 3,
+  "alert_cpu": 90,
+  "alert_ram": 85,
+  "tts_url": "http://127.0.0.1:8000/tts",
+  "tts_voice_file": "jarvis.wav"
+}

@@ -1,0 +1,18 @@
+# J.A.R.V.I.S v8.0 dependencies
+# Install with: pip install -r requirements.txt
+
+# Core (required)
+fastapi
+uvicorn[standard]
+requests
+psutil
+aiofiles
+python-multipart
+
+# Optional extras (voice, automation, vision, math)
+SpeechRecognition
+pyautogui
+pyperclip
+Pillow
+playsound
+sympy
